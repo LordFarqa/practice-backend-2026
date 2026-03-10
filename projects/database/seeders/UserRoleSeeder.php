@@ -1,9 +1,6 @@
 <?php
 
 namespace Database\Seeders;
-
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-
 use App\Models\Role;
 use Illuminate\Database\Seeder;
 
@@ -12,16 +9,13 @@ class UserRoleSeeder extends Seeder
 {
     public function run(): void
     {
-        $statuses = [
-            [
-                'name'=>'user'
-            ],
-            [
-                'name'=>'admin'
-            ]
+        $roles = [
+            ['name' => 'Клиент'],
+            ['name' => 'Администратор'],
+            ['name'=> 'Персонал']
         ];
-        foreach($statuses as $status){
-            Role::firstOrCreate($status);
+        foreach($roles as $role){
+            Role::firstOrCreate($role);
         }
     }
 }

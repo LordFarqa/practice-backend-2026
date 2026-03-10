@@ -11,7 +11,7 @@ class BookingRoomsFactory extends Factory
     public function definition(): array
     {
         return [
-            'status_id'=>fake()->numberBetween(1,7),
+            'status_id'=>fake()->numberBetween(1,3),
             'user_id'=>fake()->numberBetween(1,1000),
             'room_id'=>fake()->numberBetween(1,50),
             'booking_start'=>now(),
