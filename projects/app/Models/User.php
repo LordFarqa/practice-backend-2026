@@ -19,6 +19,12 @@ class User extends Model
         'email',
         'phone_number'
     ];
+    protected $hidden = [
+        'updated_at',
+        'id',
+        'created_at'
+    ];
+    
 
     public function client(){
         return $this->hasOne(Client::class,'user_id');

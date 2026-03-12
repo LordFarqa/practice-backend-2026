@@ -15,8 +15,13 @@ class HotelFactory extends Factory
             'adress'=>json_encode([
                 'Страна'=>fake()->country(),
                 'Город'=>fake()->city(),
-                'Улица'=>fake()->streetAddress()
-            ])
+                'Улица'=>fake()->streetAddress()],JSON_UNESCAPED_UNICODE),
+            'class'=>fake()->randomElement([
+                    '1 star',
+                    '2 stars',
+                    '3 stars',
+                    '4 stars',
+                    '5 stars'])
         ];
     }
     public function configure(){

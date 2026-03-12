@@ -14,7 +14,14 @@ class Hotel extends Model
     protected $table = "hotels";
     protected $fillable = [
         'name',
-        'adress'
+        'adress',
+        'class'
+    ];
+    protected $casts = [
+        'class' => 'array'
+    ];
+    protected $hidden = [
+        'id'
     ];
 
     public function rooms(){

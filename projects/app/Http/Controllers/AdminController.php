@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\Admin\ClientUserService;
-use Illuminate\Http\Request;
+use App\Dto\User\UserDto;
 
 use Illuminate\Routing\Controller as BaseController;
 
@@ -15,6 +15,7 @@ class AdminController extends BaseController
         $this->clientUserService = $clientUserService;
     }
     public function show(string $login){
+
         $user = $this->clientUserService->getUserByLogin($login)->toArray();
         if (!$user) {
             return response()->json([

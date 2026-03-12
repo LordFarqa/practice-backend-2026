@@ -10,11 +10,11 @@
     /reviews
 
 /api/admin
-    /users
-    /user/{login}
-    /hotels
-    /hotel/{hotel_name}
-    /rooms
-    /rooms/{room_number}
-    /room-classes
-    /bookings
+    /users //готов
+    /user/{login}// готов
+    /hotels +
+        /hotel/{hotel_name}+
+        /rooms{hotel_name}
+        /room/{room_number}
+        /room-classes
+        /bookings

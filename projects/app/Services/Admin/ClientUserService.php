@@ -1,8 +1,8 @@
 <?php
 namespace App\Services\Admin;
-use App\Dto\UserResponseDto;
+use App\Dto\User\UserResponseDto;
 use App\Models\Client;
-use App\Models\User;
+
 
 
 class ClientUserService{

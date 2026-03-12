@@ -19,6 +19,14 @@ class Client extends Model
         'role_id'
     ];
 
+    protected $hidden = [
+        'id',
+        'user_id',
+        'password',
+        'role_id'
+    ];
+
+
     public function user(){
         return $this->belongsTo(User::class,'user_id');
     }
