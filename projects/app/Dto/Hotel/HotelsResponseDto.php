@@ -10,7 +10,7 @@
             $this->hotels_data = $hotels_data;
         }
         public function toArray(){
-            return $this->hotels_data;
+            return $this->hotels_data->toArray();
         }
     }
 

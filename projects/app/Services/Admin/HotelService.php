@@ -1,38 +1,50 @@
 <?php
 namespace App\Services\Admin;
 
-use App\Dto\Hotel\RoomsResponseDto;
+use App\Dto\Hotel\CreateHotelDto;
+use App\Dto\Room\RoomsResponseDto;
+use App\Dto\Hotel\UpdateHotelDto;
 use App\Models\Hotel;
 use App\Dto\Hotel\HotelResponseDto;
 use App\Dto\Hotel\HotelsResponseDto;
 
-use App\Models\Room;
+
 class HotelService {
-    public function getHotel(string $hotel_name): ?HotelResponseDto
+    public function getHotel($id): array
     {
-        $hotel = Hotel::where('name','=',$hotel_name)->get()->map(function($hotel){
-            $hotel->adress =json_decode($hotel->adress,true);
-            return $hotel;
-        });
-        return new HotelResponseDto($hotel);
+        $hotel = Hotel::with('rooms')->findOrFail($id);
+
+        return $hotel->toArray();
     }
 
-    public function getHotels(): ?HotelsResponseDto
+    public function getHotels(): HotelsResponseDto
     {
-        $hotels_data = Hotel::select('name','adress','class')->get()->map(function($hotel){
-            $hotel->adress = json_decode($hotel->adress,true);
-            return $hotel;
-        });
-        return new HotelsResponseDto($hotels_data);
+        $hotels = Hotel::select('id','name','address','class')->get();
+
+        return new HotelsResponseDto($hotels);
     }
 
-    public function getRooms($hotel_name):?RoomsResponseDto{
-        $hotel_id = Hotel::where('name','=',$hotel_name)->value('id');
+    public function createHotel(CreateHotelDto $dto)
+    {
+        return Hotel::create($dto->toArray());
+    }
 
-        $rooms_data = Room::where('hotel_id','=',$hotel_id)->get();
+    public function updateHotel(UpdateHotelDto $dto)
+    {
+        $hotel = Hotel::findOrFail($dto->getId());
 
-        return new RoomsResponseDto($rooms_data);
+        $hotel->update(array_filter($dto->toArray()));
 
+        return $hotel;
+    }
+
+    public function deleteHotel($id)
+    {
+        $hotel = Hotel::findOrFail($id);
+
+        $hotel->reviews()->delete();
+        $hotel->rooms()->delete();
+        $hotel->delete();
     }
 
 }

@@ -1,20 +1,24 @@
 <?php
     namespace App\Dto\Hotel;
 
+    use App\Models\Hotel;
     use Illuminate\Database\Eloquent\Collection;
-    class HotelResponseDto{
-        // private readonly string $hotel_name;
-        // private readonly string $class;
-        // private readonly array $adress;
-        private readonly Collection $hotel_data;
 
-        function __construct(Collection $hotel_data){
-            $this->hotel_data = $hotel_data;
-        }
-        public function toArray(){
-            return $this->hotel_data;
-        }
+class HotelResponseDto
+{
+    private readonly string $name;
+    private readonly string $address;
+    private readonly string $class;
+
+    public function __construct(Collection $hotel)
+    {
+        $this->hotel_data = $hotel;
     }
 
+    public function toArray(): array
+    {
+        return $this->hotel_data->toArray();
+    }
+}
 
 ?>

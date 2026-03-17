@@ -14,15 +14,14 @@ class Hotel extends Model
     protected $table = "hotels";
     protected $fillable = [
         'name',
-        'adress',
+        'address',
         'class'
     ];
     protected $casts = [
-        'class' => 'array'
+        'address' => 'array',
+        'class'=>'array'
     ];
-    protected $hidden = [
-        'id'
-    ];
+
 
     public function rooms(){
         return $this->hasMany(Room::class,'hotel_id');
@@ -30,6 +29,9 @@ class Hotel extends Model
     public function reviews(){
         return $this->hasMany(Reviews::class,'hotel_id');
     }
-
+    public function getAverageRatingAttribute()
+    {
+        return $this->reviews()->avg('rating') ?? 0;
+    }
 
 }

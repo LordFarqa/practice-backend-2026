@@ -13,7 +13,8 @@ class RoomFactory extends Factory
     {
         return [
             'class_id'=>rand(1,7),
-            'floor'=>rand(1,5)
+            'floor'=>rand(1,5),
+            'number'=>fake()->numberBetween(1,1000)
         ];
     }
 

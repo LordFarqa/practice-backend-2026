@@ -1,20 +1,45 @@
 <?php
+// routes/api.php
 
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\UsersController;
-
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Booking\BookingController;
+use App\Http\Controllers\Review\ReviewController;
 use App\Http\Controllers\Hotel\HotelsController;
-
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+// Публичные маршруты
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+// Поиск (публичный)
+Route::get('/rooms/available', [BookingController::class, 'searchAvailable']);
+Route::get('/rooms/{roomId}/schedule', [BookingController::class, 'roomSchedule']);
+
+// Отзывы (публичный)
+Route::get('/hotels/{hotelId}/reviews', [ReviewController::class, 'hotelReviews']);
+
+// Отели (публичный)
+Route::get('/hotels', [HotelsController::class, 'show']);
+Route::get('/hotels/{id}', [HotelsController::class, 'showHotelById']);
+
+// Защищенные маршруты
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    
+    // Бронирования
+    Route::prefix('bookings')->group(function () {
+        Route::post('/', [BookingController::class, 'store']);
+        Route::get('/my', [BookingController::class, 'myBookings']);
+        Route::put('/{id}/cancel', [BookingController::class, 'cancelByUser']);
+        Route::get('/completed', [BookingController::class, 'getCompletedBookings']);
+    });
+    
+
+    Route::post('/reviews', [ReviewController::class, 'store']);
 });
-//admin
-Route::get('/admin/user/{login}', [AdminController::class, 'show']);
-Route::get('/admin/users/', [UsersController::class, 'show']);
-Route::get('/admin/hotels/', [HotelsController::class, 'show']);
-Route::get('/admin/hotel/{hotel_name}', [HotelsController::class, 'showByName']);
-Route::get('/admin/hotel/{hotel_name}/rooms', [HotelsController::class, 'showRoomsByHotelName']);
+
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    Route::put('/bookings/{id}/cancel', [BookingController::class, 'cancelByAdmin']);
+});

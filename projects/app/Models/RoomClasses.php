@@ -16,11 +16,13 @@ class RoomClasses extends Model
         'name',
         'price_per_day'
     ];
-
-    public function hotel(){
-        return $this->hasMany(Room::class,foreignKey: 'class_id');
-    }
-
+    protected $casts = [
+        'price_per_day'=>'float'
+    ];
+    public function rooms()
+    {
+        return $this->hasMany(Room::class, 'class_id');
+    }   
 
 
 }

@@ -35,7 +35,15 @@ class BookingRooms extends Model
         return $this->hasMany(Reviews::class,"booking_room_id");
     }
 
+    public function scopeActive($query)
+{
+    return $query->where('status_id', 1);
+}
 
+public function scopeCompleted($query)
+{
+    return $query->where('status_id', 4);
+}
 
 
 }

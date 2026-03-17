@@ -2,22 +2,32 @@
 
 namespace Database\Factories;
 
+use App\Models\BookingRooms;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\Hotel;
-use App\Models\Room;
+
 class BookingRoomsFactory extends Factory
 {
+    protected $model = BookingRooms::class;
 
-    public function definition(): array
+    public function definition()
     {
         return [
-            'status_id'=>fake()->numberBetween(1,3),
-            'user_id'=>fake()->numberBetween(1,1000),
-            'room_id'=>fake()->numberBetween(1,50),
-            'booking_start'=>now(),
-            'booking_end'=>now()->addDays(rand(1,20))
+            'room_id' => rand(1, 10),
+            'user_id' => 1006,
+            'booking_start' => $this->faker->dateTimeBetween('-1 month', 'now'),
+            'booking_end' => $this->faker->dateTimeBetween('now', '+1 month'),
+            'status_id' => 1,
         ];
     }
-    
 
+    public function completed()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'status_id' => 4,
+                'booking_start' => now()->subDays(rand(1, 30)),
+                'booking_end' => now()->subDays(rand(1, 30))->addHours(2),
+            ];
+        });
+    }
 }

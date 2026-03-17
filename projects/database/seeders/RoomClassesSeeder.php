@@ -14,31 +14,31 @@ class RoomClassesSeeder extends Seeder
     {
         $statuses = [
             [
-                'name' => 'Стандартный',
+                'name' => 'Standart',
                 'price_per_day' => 2500
             ],
             [
-                'name' => 'Улучшенный',
+                'name' => 'Update',
                 'price_per_day' => 3500
             ],
             [
-                'name'=> 'Со спальной комнатой',
+                'name'=> 'With a sleeping road',
                 'price_per_day' => 5500
             ],
             [
-                'name'=> 'Апартаменты',
+                'name'=> 'Apartments',
                 'price_per_day' => 8500
             ],
             [
-                'name'=> 'Студия',
+                'name'=> 'Studio',
                 'price_per_day' => 4500
             ],
             [
-                'name'=> 'Люкс',
+                'name'=> 'Lux',
                 'price_per_day' => 10000
             ],
             [
-                'name'=> 'Президентский',
+                'name'=> 'Presidential',
                 'price_per_day' => 30000
             ]
         ];
