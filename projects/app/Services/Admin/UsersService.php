@@ -120,4 +120,45 @@ class UsersService {
     public function findUser($id){
         return User::with('client')->find($id);
     }
+public function getAllUsers(int $perPage = 20, ?string $search = null)
+{
+    $query = User::with('client', 'client.role')
+        ->select('users.*');
+    
+    if ($search) {
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'like', "%$search%")
+              ->orWhere('surname', 'like', "%$search%")
+              ->orWhere('email', 'like', "%$search%")
+              ->orWhereHas('client', function($cq) use ($search) {
+                  $cq->where('login', 'like', "%$search%");
+              });
+        });
+    }
+    
+    return $query->orderBy('id', 'desc')->paginate($perPage);
+}
+
+public function getUserById(int $id): ?array
+{
+    $user = User::with('client', 'client.role')->find($id);
+    
+    if (!$user) {
+        return null;
+    }
+    
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+        'surname' => $user->surname,
+        'last_name' => $user->last_name,
+        'email' => $user->email,
+        'phone_number' => $user->phone_number,
+        'login' => $user->client->login,
+        'role_id' => $user->client->role_id,
+        'role_name' => $user->client->role->name ?? null,
+        'created_at' => $user->created_at,
+        'bookings_count' => $user->booking()->count()
+    ];
+}
 }

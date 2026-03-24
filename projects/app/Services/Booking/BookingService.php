@@ -146,4 +146,130 @@ class BookingService
             ->whereDoesntHave('reviews') // У которых нет отзыва
             ->get();
     }
+public function getAllBookings(int $perPage = 20, ?string $status = null, ?int $userId = null)
+{
+    $query = BookingRooms::with(['room.hotel', 'room.room_classes', 'user', 'status']);
+    
+    if ($status) {
+        $query->whereHas('status', function($q) use ($status) {
+            $q->where('name', 'like', "%$status%");
+        });
+    }
+    
+    if ($userId) {
+        $query->where('user_id', $userId);
+    }
+    
+    return $query->orderBy('created_at', 'desc')->paginate($perPage);
+}
+
+public function getBookingById(int $id): ?array
+{
+    $booking = BookingRooms::with(['room.hotel', 'room.room_classes', 'user', 'status'])
+        ->find($id);
+    
+    if (!$booking) {
+        return null;
+    }
+    
+    return [
+        'id' => $booking->id,
+        'room' => [
+            'id' => $booking->room->id,
+            'number' => $booking->room->number,
+            'floor' => $booking->room->floor,
+            'class' => $booking->room->room_classes->name ?? null,
+            'price_per_day' => $booking->room->room_classes->price_per_day ?? null,
+            'hotel' => [
+                'id' => $booking->room->hotel->id,
+                'name' => $booking->room->hotel->name,
+                'address' => $booking->room->hotel->address
+            ]
+        ],
+        'user' => [
+            'id' => $booking->user->id,
+            'name' => $booking->user->name,
+            'surname' => $booking->user->surname,
+            'email' => $booking->user->email,
+            'phone' => $booking->user->phone_number
+        ],
+        'booking_start' => $booking->booking_start,
+        'booking_end' => $booking->booking_end,
+        'status' => $booking->status->name,
+        'status_id' => $booking->status_id,
+        'created_at' => $booking->created_at
+    ];
+}
+
+public function deleteBooking(int $id): bool
+{
+    $booking = BookingRooms::find($id);
+    
+    if (!$booking) {
+        return false;
+    }
+    
+    // Удаляем связанные отзывы
+    $booking->reviews()->delete();
+    
+    return $booking->delete();
+}
+
+public function getSystemStats(): array
+{
+    return [
+        'total_users' => User::count(),
+        'total_hotels' => Hotel::count(),
+        'total_rooms' => Room::count(),
+        'total_bookings' => BookingRooms::count(),
+        'active_bookings' => BookingRooms::where('status_id', 1)->count(),
+        'completed_bookings' => BookingRooms::where('status_id', 4)->count(),
+        'cancelled_bookings' => BookingRooms::whereIn('status_id', [2, 3])->count(),
+        'total_reviews' => Reviews::count(),
+        'average_rating' => round(Reviews::avg('rating') ?? 0, 1)
+    ];
+}
+
+public function getBookingStats(?string $startDate = null, ?string $endDate = null): array
+{
+    $query = BookingRooms::query();
+    
+    if ($startDate) {
+        $query->whereDate('booking_start', '>=', $startDate);
+    }
+    
+    if ($endDate) {
+        $query->whereDate('booking_end', '<=', $endDate);
+    }
+    
+    $bookings = $query->get();
+    
+    return [
+        'total' => $bookings->count(),
+        'by_status' => [
+            'active' => $bookings->where('status_id', 1)->count(),
+            'completed' => $bookings->where('status_id', 4)->count(),
+            'cancelled_by_admin' => $bookings->where('status_id', 2)->count(),
+            'cancelled_by_user' => $bookings->where('status_id', 3)->count()
+        ],
+        'revenue' => $this->calculateRevenue($startDate, $endDate)
+    ];
+}
+
+private function calculateRevenue(?string $startDate = null, ?string $endDate = null): float
+{
+    $query = BookingRooms::where('status_id', 4)
+        ->join('rooms', 'booking_rooms.room_id', '=', 'rooms.id')
+        ->join('room_classes', 'rooms.class_id', '=', 'room_classes.id');
+    
+    if ($startDate) {
+        $query->whereDate('booking_start', '>=', $startDate);
+    }
+    
+    if ($endDate) {
+        $query->whereDate('booking_end', '<=', $endDate);
+    }
+    
+    return $query->sum('room_classes.price_per_day') ?? 0;
+}
 }
