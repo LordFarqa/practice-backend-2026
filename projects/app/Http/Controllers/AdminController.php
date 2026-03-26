@@ -10,7 +10,7 @@ use App\Services\Admin\UsersService;
 use App\Services\Booking\BookingService;
 use App\Dto\Hotel\CreateHotelDto;
 use App\Dto\Hotel\UpdateHotelDto;
-use App\Dto\Room\RoomCreateDto;
+
 use App\Dto\Room\RoomUpdateDto;
 use App\Dto\Room\RoomClassCreateDto;
 use App\Dto\Room\RoomClassUpdateDto;
