@@ -1,35 +1,27 @@
 <?php
-    namespace App\Dto\Room;
+// app/Dto/Room/RoomUpdateDto.php
 
-    use Illuminate\Support\Collection;
-    class RoomUpdateDto{
+namespace App\Dto\Room;
 
-        private readonly int $number;
-        private readonly int $hotel_id;
-        private readonly int $class_id;
-        private readonly int $floor;
-        private readonly int $id;
+class RoomUpdateDto
+{
+    public function __construct(
+        private readonly int $id,
+        private readonly array $data
+    ) {}
 
-        function __construct(int $id,array $room_data){
-            $this->id = $id;
-            $this->number = $room_data['number'];
-            $this->hotel_id = $room_data['hotel_id'];
-            $this->class_id = $room_data['class_id'];
-            $this->floor = $room_data['floor'];
-
-        }
-        public function toArray(){
-            return [
-                'number'=> $this->number,
-                'hotel_id'=> $this->hotel_id,
-                'class_id'=> $this->class_id,
-                'floor'=> $this->floor 
-            ];
-        }
-        public function getId(){
-            return $this->id;
-        }
+    public function getId(): int
+    {
+        return $this->id;
     }
 
-
-?>
+    public function toArray(): array
+    {
+        return array_filter([
+            'number' => $this->data['number'] ?? null,
+            'hotel_id' => $this->data['hotel_id'] ?? null,
+            'class_id' => $this->data['class_id'] ?? null,
+            'floor' => $this->data['floor'] ?? null
+        ], fn($value) => !is_null($value));
+    }
+}
