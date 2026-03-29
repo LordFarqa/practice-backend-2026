@@ -1,119 +1,46 @@
 <?php
+// app/Http/Controllers/UsersController.php
 
 namespace App\Http\Controllers;
 
 use App\Services\Admin\UsersService;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\JsonResponse;
 
-class UsersController extends BaseController
+class UsersController extends Controller
 {
-    private UsersService $usersService;
-
-    function __construct(UsersService $usersService){
+    protected UsersService $usersService;
+    
+    public function __construct(UsersService $usersService)
+    {
         $this->usersService = $usersService;
     }
-
-    public function show(){
-        $users = $this->usersService->getUsers();
-
+    
+    public function index(Request $request): JsonResponse
+    {
+        $perPage = $request->get('per_page', 20);
+        $search = $request->get('search');
+        
+        $users = $this->usersService->getAllUsers((int) $perPage, $search);
+        
+        // Исправлено: проверка на пустую коллекцию, а не массив
         if ($users->isEmpty()) {
             return response()->json([
-                'message' => 'Users not found'
-            ],404);
+                'success' => true,
+                'data' => [],
+                'message' => 'No users found'
+            ]);
         }
-
-        return response()->json($users);
-    }
-
-    public function showUserByLogin(string $login){
-        $user = $this->usersService->getUserByLogin($login);
-
-        if(!$user){
-            return response()->json([
-                'message' => 'User not found'
-            ],404);
-        }
-
-        return response()->json($user);
-    }
-
-
-    public function createUser(Request $request)
-    {
-        $validator = Validator::make($request->all(),[
-            'name'=>'required|string',
-            'surname'=>'required|string',
-            'last_name'=>'nullable|string',
-            'email'=>'required|email',
-            'phone_number'=>'required|string',
-
-            'login'=>'required|string|unique:clients,login',
-            'password'=>'required|min:6'
-        ]);
-
-        if($validator->fails()){
-            return response()->json([
-                'errors'=>$validator->errors()
-            ],422);
-        }
-
-        $user = $this->usersService->createUser($request->all());
-
+        
         return response()->json([
-            'message'=>'User created',
-            'data'=>$user
-        ],201);
-    }
-
-
-public function updateUser(Request $request, int $id)
-    {
-        $user = $this->usersService->findUser($id);
-
-        if(!$user){
-            return response()->json([
-                'message'=>'User not found'
-            ],404);
-        }
-
-        $validator = Validator::make($request->all(),[
-            'name'=>'sometimes|string',
-            'surname'=>'sometimes|string',
-            'last_name'=>'sometimes|string',
-            'email'=>'sometimes|email',
-            'phone_number'=>'sometimes|string',
-
-            'login'=>'sometimes|string|unique:clients,login,'.$user->client->id,
-            'password'=>'sometimes|min:6'
-        ]);
-
-        if($validator->fails()){
-            return response()->json([
-                'errors'=>$validator->errors()
-            ],422);
-        }
-
-        $updatedUser = $this->usersService->updateUser($id,$request->all());
-
-        return response()->json([
-            'message'=>'User updated',
-            'data'=>$updatedUser
-        ]);
-    }
-
-    public function deleteUser(int $id){
-        $result = $this->usersService->deleteUser($id);
-
-        if(!$result){
-            return response()->json([
-                'message'=>'User not found'
-            ],404);
-        }
-
-        return response()->json([
-            'message'=>'User deleted'
+            'success' => true,
+            'data' => $users,
+            'meta' => [
+                'current_page' => $users->currentPage(),
+                'per_page' => $users->perPage(),
+                'total' => $users->total(),
+                'last_page' => $users->lastPage()
+            ]
         ]);
     }
 }

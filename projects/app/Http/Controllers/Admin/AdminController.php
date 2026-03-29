@@ -257,32 +257,31 @@ class AdminController extends Controller
     }
 
     public function updateHotel(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
-            'address' => 'sometimes|string',
-            'class' => 'sometimes|integer|min:1|max:5'
-        ]);
-        
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-        
-        $data = $request->all();
-        $data['id'] = $id;
-        $dto = new UpdateHotelDto($data);
-        
-        $hotel = $this->hotelService->updateHotel($dto);
-        
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'sometimes|string|max:255',
+        'address' => 'sometimes|string',
+        'class' => 'sometimes|integer|min:1|max:5'
+    ]);
+    
+    if ($validator->fails()) {
         return response()->json([
-            'success' => true,
-            'message' => 'Hotel updated successfully',
-            'data' => $hotel
-        ]);
+            'success' => false,
+            'errors' => $validator->errors()
+        ], 422);
     }
+    
+    // Исправлено: передаем id и данные
+    $dto = new UpdateHotelDto((int)$id, $request->all());
+    
+    $hotel = $this->hotelService->updateHotel($dto);
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Hotel updated successfully',
+        'data' => $hotel
+    ]);
+}
 
     public function deleteHotel($id)
     {
@@ -328,60 +327,61 @@ class AdminController extends Controller
     }
 
     public function createRoom(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'number' => 'required|string|max:10',
-            'hotel_id' => 'required|exists:hotels,id',
-            'class_id' => 'required|exists:room_classes,id',
-            'floor' => 'required|integer|min:1'
-        ]);
-        
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-        
-        $dto = new RoomCreateDto($request->all());
-        $room = $this->roomService->createRoom($dto);
-        
+{
+    $validator = Validator::make($request->all(), [
+        'number' => 'required|string|max:10',
+        'hotel_id' => 'required|exists:hotels,id',
+        'class_id' => 'required|exists:room_classes,id',
+        'floor' => 'required|integer|min:1'
+    ]);
+    
+    if ($validator->fails()) {
         return response()->json([
-            'success' => true,
-            'message' => 'Room created successfully',
-            'data' => $room
-        ], 201);
+            'success' => false,
+            'errors' => $validator->errors()
+        ], 422);
     }
+    
+    // Исправлено: передаем hotel_id и данные
+    $dto = new RoomCreateDto((int)$request->hotel_id, $request->all());
+    $room = $this->roomService->createRoom($dto);
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Room created successfully',
+        'data' => $room
+    ], 201);
+}
+
 
     public function updateRoom(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'number' => 'sometimes|string|max:10',
-            'hotel_id' => 'sometimes|exists:hotels,id',
-            'class_id' => 'sometimes|exists:room_classes,id',
-            'floor' => 'sometimes|integer|min:1'
-        ]);
-        
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-        
-        $data = $request->all();
-        $data['id'] = $id;
-        $dto = new RoomUpdateDto($data);
-        
-        $room = $this->roomService->updateRoom($dto);
-        
+{
+    $validator = Validator::make($request->all(), [
+        'number' => 'sometimes|string|max:10',
+        'hotel_id' => 'sometimes|exists:hotels,id',
+        'class_id' => 'sometimes|exists:room_classes,id',
+        'floor' => 'sometimes|integer|min:1'
+    ]);
+    
+    if ($validator->fails()) {
         return response()->json([
-            'success' => true,
-            'message' => 'Room updated successfully',
-            'data' => $room
-        ]);
+            'success' => false,
+            'errors' => $validator->errors()
+        ], 422);
     }
-
+    
+    // Исправлено: передаем id и данные
+    $dto = new RoomUpdateDto((int)$id, $request->all());
+    
+    $room = $this->roomService->updateRoom($dto);
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Room updated successfully',
+        'data' => $room
+    ]);
+}
+    
     public function deleteRoom($id)
     {
         $result = $this->roomService->deleteRoom($id);

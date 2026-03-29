@@ -1,33 +1,26 @@
 <?php
-    namespace App\Dto\Hotel;
+// app/Dto/Hotel/UpdateHotelDto.php
 
+namespace App\Dto\Hotel;
 
+class UpdateHotelDto
+{
+    public function __construct(
+        private readonly int $id,
+        private readonly array $data
+    ) {}
 
-;
-    class UpdateHotelDto{
-
-        private readonly string $name;
-        private readonly array $address;
-        private readonly string $class;
-        private readonly int $id;
-
-        function __construct($id,array $hotel_data){
-            $this->id = $id;
-            $this->name = $hotel_data['name'];
-            $this->address = $hotel_data['address'];
-            $this->class = $hotel_data['class'];
-        }
-        public function toArray(){
-            return [
-                'name'=>$this->name,
-                'address'=>$this->address,
-                'class'=>$this->class
-            ];
-        }
-        public function getId(){
-            return $this->id;
-        }
+    public function getId(): int
+    {
+        return $this->id;
     }
 
-
-?>
+    public function toArray(): array
+    {
+        return array_filter([
+            'name' => $this->data['name'] ?? null,
+            'address' => $this->data['address'] ?? null,
+            'class' => $this->data['class'] ?? null
+        ], fn($value) => $value !== null);
+    }
+}

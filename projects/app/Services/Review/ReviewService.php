@@ -32,35 +32,36 @@ class ReviewService
         return Reviews::create($dto->toArray());
     }
 
-    public function getHotelReviews(int $hotelId)
-    {
-        $reviews = Reviews::with(['booking.user'])
-            ->where('hotel_id', $hotelId)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $averageRating = $reviews->avg('rating');
-
-        return [
-            'average_rating' => round($averageRating, 1),
-            'total_reviews' => $reviews->count(),
-            'reviews' => $reviews->map(function ($review) {
-                return [
-                    'id' => $review->id,
-                    'user_name' => $review->booking->user->name . ' ' . $review->booking->user->surname,
-                    'rating' => $review->rating,
-                    'comment' => $review->comment,
-                    'created_at' => $review->created_at->format('Y-m-d H:i:s')
-                ];
-            })
-        ];
-    }
-
-    public function updateHotelAverageRating(int $hotelId): void
-    {
-        $averageRating = Reviews::where('hotel_id', $hotelId)
-            ->avg('rating');
 
 
+public function getReviewComment(int $reviewId): ?string
+{
+    try {
+        /** @var Reviews|null $review */
+        $review = Reviews::find($reviewId);
+        
+        if (!$review) {
+            return null;
+        }
+        
+        // Используем поле 'coment' из БД
+        return $review->coment ?? null;
+    } catch (\Exception $e) {
+        return null;
     }
 }
+
+public function formatReview(Reviews $review): array
+{
+    return [
+        'id' => $review->id,
+        'comment' => $review->coment ?? '', // Исправлено
+        'rating' => $review->rating ?? 0,
+        'hotel_id' => $review->hotel_id,
+        'user_id' => $review->user_id,
+        'booking_id' => $review->booking_room_id, // Исправлено
+        'created_at' => $review->created_at?->format('Y-m-d H:i:s')
+    ];
+}
+}
+?>

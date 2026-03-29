@@ -1,37 +1,31 @@
 <?php
+// app/Models/User.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Laravel\Sanctum\HasApiTokens;
-use App\Traits\UserHasRole;
-class User extends Authenticatable
-{
-    use HasApiTokens, HasFactory, UserHasRole;
+use Illuminate\Foundation\Auth\User as Authenticatable; // ИЗМЕНИТЕ ЭТО
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Sanctum\HasApiTokens; // ДОБАВЬТЕ ЭТО
 
-    protected $table = 'users';
-    public $timestamps = true;
+class User extends Authenticatable // ИЗМЕНИТЕ С Model НА Authenticatable
+{
+    use HasApiTokens, HasFactory; // ДОБАВЬТЕ HasApiTokens
     
     protected $fillable = [
-        'name',
-        'surname',
-        'last_name',
-        'email',
-        'phone_number'
+        'name', 'surname', 'last_name', 'email', 'phone_number'
     ];
     
-    protected $hidden = [
-        'updated_at',
-        'created_at'
-    ];
-
-    public function client()
+    // Уберите 'password' из fillable, если его нет в таблице users
+    // Пароль хранится в таблице clients, не в users
+    
+    public function client(): HasOne
     {
         return $this->hasOne(Client::class, 'user_id');
     }
-
-    public function booking()
+    
+    public function bookings(): HasMany
     {
         return $this->hasMany(BookingRooms::class, 'user_id');
     }

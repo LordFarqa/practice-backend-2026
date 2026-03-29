@@ -1,21 +1,28 @@
 <?php
+// app/Dto/Booking/BookingsResponseDto.php
+
 namespace App\Dto\Booking;
 
+use App\Models\BookingRooms;
 use Illuminate\Database\Eloquent\Collection;
 
 class BookingsResponseDto
 {
-    private array $bookings = [];
-
+    private Collection $bookings;
+    
     public function __construct(Collection $bookings)
     {
-        foreach ($bookings as $booking) {
-            $this->bookings[] = (new BookingResponseDto($booking))->toArray();
-        }
+        $this->bookings = $bookings;
     }
-
+    
     public function toArray(): array
     {
-        return $this->bookings;
+        /** @var Collection<int, BookingRooms> $bookings */
+        $bookings = $this->bookings;
+        
+        return $bookings->map(function (BookingRooms $booking): array {
+            $dto = new BookingResponseDto($booking);
+            return $dto->toArray();
+        })->toArray();
     }
 }

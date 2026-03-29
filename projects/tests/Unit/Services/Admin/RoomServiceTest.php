@@ -10,6 +10,8 @@ use App\Models\Hotel;
 use App\Models\RoomClasses;
 use App\Models\BookingRooms;
 use App\Models\User;
+use App\Models\Client;
+use App\Models\Role;
 use App\Models\BookingStatus;
 use App\Dto\Room\RoomCreateDto;
 use App\Dto\Room\RoomUpdateDto;
@@ -24,6 +26,7 @@ class RoomServiceTest extends TestCase
     private Hotel $hotel;
     private RoomClasses $roomClass;
     private User $user;
+    private Role $role;
     private BookingStatus $activeStatus;
     private BookingStatus $completedStatus;
     private BookingStatus $cancelledByAdminStatus;
@@ -35,30 +38,49 @@ class RoomServiceTest extends TestCase
         
         $this->roomService = new RoomService();
         
-        // Создаем статусы бронирований с правильными ID
-        $this->activeStatus = BookingStatus::create(['id' => 1, 'name' => 'active']);
-        $this->cancelledByAdminStatus = BookingStatus::create(['id' => 2, 'name' => 'cancelled_by_admin']);
-        $this->cancelledByUserStatus = BookingStatus::create(['id' => 3, 'name' => 'cancelled_by_user']);
-        $this->completedStatus = BookingStatus::create(['id' => 4, 'name' => 'completed']);
-        
-        // Создаем тестовые данные
-        $this->hotel = Hotel::create([
-            'name' => 'Test Hotel',
-            'address' => '123 Test Street',
-            'class' => 4
+        // Создаем роль
+        $this->role = Role::create([
+            'id' => 2,
+            'name' => 'user'
         ]);
         
+        // Создаем статусы бронирований (не указываем ID, пусть база сама назначит)
+        $this->activeStatus = BookingStatus::create(['name' => 'active']);
+        $this->cancelledByAdminStatus = BookingStatus::create(['name' => 'cancelled_by_admin']);
+        $this->cancelledByUserStatus = BookingStatus::create(['name' => 'cancelled_by_user']);
+        $this->completedStatus = BookingStatus::create(['name' => 'completed']);
+        
+        // Создаем отель
+        $this->hotel = Hotel::create([
+            'name' => 'Test Hotel',
+            'address' => json_encode([
+                'Страна' => 'Россия',
+                'Город' => 'Москва',
+                'Улица' => 'ул. Тестовая, д. ' . rand(1, 1000)
+            ], JSON_UNESCAPED_UNICODE),
+            'class' => '4 stars'
+        ]);
+        
+        // Создаем класс комнаты
         $this->roomClass = RoomClasses::create([
             'name' => 'Deluxe',
             'price_per_day' => 150.00
         ]);
         
+        // Создаем пользователя
         $this->user = User::create([
             'name' => 'John',
             'surname' => 'Doe',
             'email' => 'john@example.com',
-            'phone_number' => '123456789',
-            'password' => bcrypt('password')
+            'phone_number' => '123456789'
+        ]);
+        
+        // Создаем клиента
+        Client::create([
+            'user_id' => $this->user->id,
+            'login' => 'john_doe_' . rand(1, 10000),
+            'password' => bcrypt('password'),
+            'role_id' => $this->role->id
         ]);
     }
 
@@ -154,8 +176,12 @@ class RoomServiceTest extends TestCase
     {
         $hotel2 = Hotel::create([
             'name' => 'Second Hotel',
-            'address' => '456 Other Street',
-            'class' => 3
+            'address' => json_encode([
+                'Страна' => 'Россия',
+                'Город' => 'Санкт-Петербург',
+                'Улица' => 'ул. Вторая, д. ' . rand(1, 1000)
+            ], JSON_UNESCAPED_UNICODE),
+            'class' => '3 stars'
         ]);
         
         Room::create([
@@ -211,8 +237,12 @@ class RoomServiceTest extends TestCase
     {
         $hotel2 = Hotel::create([
             'name' => 'Second Hotel',
-            'address' => '456 Other Street',
-            'class' => 3
+            'address' => json_encode([
+                'Страна' => 'Россия',
+                'Город' => 'Казань',
+                'Улица' => 'ул. Тестовая, д. ' . rand(1, 1000)
+            ], JSON_UNESCAPED_UNICODE),
+            'class' => '3 stars'
         ]);
         
         $class2 = RoomClasses::create([
@@ -294,31 +324,57 @@ class RoomServiceTest extends TestCase
     }
 
     /** @test */
-    public function it_cannot_delete_room_with_existing_active_bookings()
-    {
-        $room = Room::create([
-            'hotel_id' => $this->hotel->id,
-            'number' => 101,
-            'class_id' => $this->roomClass->id,
-            'floor' => 1
-        ]);
-        
-        // Создаем активное бронирование
-        BookingRooms::create([
-            'room_id' => $room->id,
-            'user_id' => $this->user->id,
-            'booking_start' => now()->addDay(),
-            'booking_end' => now()->addDays(2),
-            'status_id' => $this->activeStatus->id
-        ]);
-
-        $result = $this->roomService->deleteRoom($room->id);
-        
-        $this->assertFalse($result);
-        $this->assertDatabaseHas('rooms', ['id' => $room->id]);
-        $this->assertDatabaseHas('booking_rooms', ['room_id' => $room->id]);
+public function it_cannot_delete_room_with_existing_active_bookings()
+{
+    // Выводим ID созданных статусов
+    dump('=== DEBUG INFO ===');
+    dump('Active status ID: ' . $this->activeStatus->id);
+    dump('Completed status ID: ' . $this->completedStatus->id);
+    dump('Cancelled by admin ID: ' . $this->cancelledByAdminStatus->id);
+    dump('Cancelled by user ID: ' . $this->cancelledByUserStatus->id);
+    
+    $room = Room::create([
+        'hotel_id' => $this->hotel->id,
+        'number' => 101,
+        'class_id' => $this->roomClass->id,
+        'floor' => 1
+    ]);
+    
+    $booking = BookingRooms::create([
+        'room_id' => $room->id,
+        'user_id' => $this->user->id,
+        'booking_start' => now()->addDay(),
+        'booking_end' => now()->addDays(2),
+        'status_id' => $this->activeStatus->id
+    ]);
+    
+    dump('Booking created with status_id: ' . $booking->status_id);
+    
+    // Проверяем, что бронирование действительно существует
+    $bookingExists = BookingRooms::where('id', $booking->id)->exists();
+    dump('Booking exists in DB: ' . ($bookingExists ? 'true' : 'false'));
+    
+    // Проверяем, какие бронирования есть для этой комнаты
+    $bookingsForRoom = BookingRooms::where('room_id', $room->id)->get();
+    dump('Bookings for room: ' . $bookingsForRoom->count());
+    foreach ($bookingsForRoom as $b) {
+        dump('  Booking ID: ' . $b->id . ', Status ID: ' . $b->status_id);
     }
-
+    
+    // Проверяем, есть ли активные бронирования
+    $hasActive = BookingRooms::where('room_id', $room->id)
+        ->where('status_id', $this->activeStatus->id)
+        ->exists();
+    dump('Has active bookings (using activeStatus->id): ' . ($hasActive ? 'true' : 'false'));
+    
+    $result = $this->roomService->deleteRoom($room->id);
+    dump('Delete result: ' . ($result ? 'true' : 'false'));
+    dump('==================');
+    
+    $this->assertFalse($result);
+    $this->assertDatabaseHas('rooms', ['id' => $room->id]);
+    $this->assertDatabaseHas('booking_rooms', ['room_id' => $room->id]);
+}
     /** @test */
     public function it_cannot_delete_room_with_completed_bookings()
     {
@@ -329,13 +385,13 @@ class RoomServiceTest extends TestCase
             'floor' => 1
         ]);
         
-        // Создаем завершенное бронирование
+        // Используем реальный ID завершенного статуса
         BookingRooms::create([
             'room_id' => $room->id,
             'user_id' => $this->user->id,
             'booking_start' => now()->subDays(5),
             'booking_end' => now()->subDays(3),
-            'status_id' => $this->completedStatus->id
+            'status_id' => $this->completedStatus->id  // Используем ID из созданного статуса
         ]);
 
         $result = $this->roomService->deleteRoom($room->id);
@@ -355,13 +411,13 @@ class RoomServiceTest extends TestCase
             'floor' => 1
         ]);
         
-        // Создаем отмененное бронирование
+        // Используем реальный ID отмененного статуса
         $booking = BookingRooms::create([
             'room_id' => $room->id,
             'user_id' => $this->user->id,
             'booking_start' => now()->addDay(),
             'booking_end' => now()->addDays(2),
-            'status_id' => $this->cancelledByAdminStatus->id
+            'status_id' => $this->cancelledByAdminStatus->id  // Используем ID из созданного статуса
         ]);
 
         $result = $this->roomService->deleteRoom($room->id);
@@ -389,7 +445,7 @@ class RoomServiceTest extends TestCase
             'floor' => 1
         ]);
         
-        // Создаем несколько бронирований
+        // Используем реальные ID статусов
         BookingRooms::create([
             'room_id' => $room->id,
             'user_id' => $this->user->id,
@@ -416,8 +472,12 @@ class RoomServiceTest extends TestCase
     {
         $hotel2 = Hotel::create([
             'name' => 'Second Hotel',
-            'address' => '456 Other Street',
-            'class' => 3
+            'address' => json_encode([
+                'Страна' => 'Россия',
+                'Город' => 'Екатеринбург',
+                'Улица' => 'ул. Третья, д. ' . rand(1, 1000)
+            ], JSON_UNESCAPED_UNICODE),
+            'class' => '3 stars'
         ]);
         
         Room::create([

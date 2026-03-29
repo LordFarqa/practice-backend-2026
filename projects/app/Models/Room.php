@@ -5,6 +5,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Room extends Model
 {
@@ -22,24 +24,18 @@ class Room extends Model
         'class_id',
     ];
 
-    public function hotel()
+    public function hotel(): BelongsTo
     {
         return $this->belongsTo(Hotel::class, 'hotel_id');
     }
     
-    public function room_classes()
+    public function room_classes(): BelongsTo
     {
         return $this->belongsTo(RoomClasses::class, 'class_id');
     }
     
-    public function bookings()
+    public function bookings(): HasMany
     {
         return $this->hasMany(BookingRooms::class, 'room_id');
-    }
-    
-
-    public function scopeWithBookingsCount($query)
-    {
-        return $query->withCount('bookings');
     }
 }

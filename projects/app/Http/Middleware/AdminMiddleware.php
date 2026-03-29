@@ -123,4 +123,5 @@ class AdminMiddleware
         
         return response()->json($response, $statusCode);
     }
+    
 }

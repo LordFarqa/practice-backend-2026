@@ -22,6 +22,6 @@ class RoomUpdateDto
             'hotel_id' => $this->data['hotel_id'] ?? null,
             'class_id' => $this->data['class_id'] ?? null,
             'floor' => $this->data['floor'] ?? null
-        ], fn($value) => !is_null($value));
+        ], fn($value) => $value !== null);
     }
 }
